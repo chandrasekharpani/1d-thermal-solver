@@ -14,13 +14,36 @@ dt = st.sidebar.number_input("Time Step dt [s]", value=0.05, format="%.3f")
 T_hot = st.sidebar.number_input("Hot Boundary Temperature [K]", value=400.0)
 T_cold = st.sidebar.number_input("Cold Boundary Temperature [K]", value=300.0)
 
-# Multi-layer material definitions
+st.sidebar.markdown("---")
+st.sidebar.header("Layer Thickness & Mesh Controls")
+
+# Layer 1: Aluminum
+st.sidebar.subheader("Layer 1: Aluminum")
+L1_thick = st.sidebar.number_input("Thickness 1 [m]", value=0.01, format="%.4f")
+L1_nodes = st.sidebar.slider("Nodes 1", 5, 40, 15)
+
+# Layer 2: TIM (Thermal Interface Material)
+st.sidebar.subheader("Layer 2: TIM")
+L2_thick = st.sidebar.number_input("Thickness 2 [m]", value=0.002, format="%.4f")
+L2_nodes = st.sidebar.slider("Nodes 2", 5, 40, 10)
+
+# Layer 3: Steel
+st.sidebar.subheader("Layer 3: Steel")
+L3_thick = st.sidebar.number_input("Thickness 3 [m]", value=0.015, format="%.4f")
+L3_nodes = st.sidebar.slider("Nodes 3", 5, 40, 15)
+
+st.sidebar.markdown("---")
+st.sidebar.header("Thermal Contact Resistance ($R_{tc}$)")
+Rtc_1 = st.sidebar.number_input("R_tc (Layer 1-2) [m²K/W]", value=1.2e-4, format="%.1e")
+Rtc_2 = st.sidebar.number_input("R_tc (Layer 2-3) [m²K/W]", value=2.5e-4, format="%.1e")
+
+# Multi-layer material definitions linked to dynamic inputs
 layers = [
-    {"k": 167.0, "rho": 2700, "cp": 896, "thickness": 0.01, "nodes": 15},   # Aluminum
-    {"k": 2.0, "rho": 1500, "cp": 1000, "thickness": 0.002, "nodes": 10}, # TIM
-    {"k": 14.9, "rho": 7900, "cp": 477, "thickness": 0.015, "nodes": 15}, # Steel
+    {"k": 167.0, "rho": 2700, "cp": 896, "thickness": L1_thick, "nodes": L1_nodes},   # Aluminum
+    {"k": 2.0, "rho": 1500, "cp": 1000, "thickness": L2_thick, "nodes": L2_nodes}, # TIM
+    {"k": 14.9, "rho": 7900, "cp": 477, "thickness": L3_thick, "nodes": L3_nodes}, # Steel
 ]
-R_contacts = [1.2e-4, 2.5e-4]
+R_contacts = [Rtc_1, Rtc_2]
 
 if st.button("Run Simulation", type="primary"):
     with st.spinner("Executing sparse matrix time-stepping loop..."):
@@ -42,7 +65,7 @@ if st.button("Run Simulation", type="primary"):
         ))
         
     fig.update_layout(
-        title="Temperature Distribution Across Multilayer Wall",
+        title="Temperature Distribution Across Multilayer Wall with TCR",
         xaxis_title="Spatial Position x [m]",
         yaxis_title="Temperature [K]",
         yaxis=dict(range=[T_cold - 5, T_hot + 5]),
